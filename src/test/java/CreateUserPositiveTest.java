@@ -1,3 +1,4 @@
+import io.qameta.allure.junit4.DisplayName;
 import io.restassured.RestAssured;
 import io.restassured.response.Response;
 import model.User;
@@ -43,6 +44,7 @@ public class CreateUserPositiveTest {
     }
 
     @Test
+    @DisplayName("Проверка создания пользователя")
     public void createUser(){
         Response responseCreate = userClient.createUser(user);
         responseCreate.then().statusCode(200).assertThat().body("success", equalTo(true));

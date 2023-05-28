@@ -1,3 +1,4 @@
+import io.qameta.allure.junit4.DisplayName;
 import io.restassured.RestAssured;
 import io.restassured.response.Response;
 import model.Login;
@@ -56,6 +57,7 @@ public class LoginUserTest {
     }
 
     @Test
+    @DisplayName("Проверка логина пользователя")
     public void loginUser(){
         Response responseCreate = userClient.createUser(user);
         accessToken = responseCreate.then().log().all().statusCode(statusCodeCreate).extract().path("accessToken");

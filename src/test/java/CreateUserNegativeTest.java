@@ -1,4 +1,5 @@
 import io.qameta.allure.Step;
+import io.qameta.allure.junit4.DisplayName;
 import io.restassured.RestAssured;
 import io.restassured.response.Response;
 import model.User;
@@ -51,6 +52,7 @@ public class CreateUserNegativeTest {
     }
 
     @Test
+    @DisplayName("Проверка создания пользователя с НЕ валидными данными и попытка создания существующего пользователя")
     public void createUser(){
         Response responseCreate = userClient.createUser(user);
         responseCreate.then().log().all().statusCode(statusCode).body("success", equalTo(success)).body("message", equalTo(message));

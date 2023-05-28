@@ -1,3 +1,4 @@
+import io.qameta.allure.junit4.DisplayName;
 import io.restassured.RestAssured;
 import io.restassured.response.Response;
 import model.Login;
@@ -59,6 +60,7 @@ public class ChangingUserDataTest {
    }
 
     @Test
+    @DisplayName("Проверка обновления данных авторизованного пользователя")
     public void updateUserTest(){
         //Получение данных пользователя (email, Имя)
         Response responseGetUser = userClient.getUser(accessToken);
@@ -76,6 +78,7 @@ public class ChangingUserDataTest {
     }
 
     @Test
+    @DisplayName("Проверка обновления данных НЕ авторизованного пользователя")
     public void updateUserWithoutAuthorizationTest(){
         //Обновление данных не авторизованного пользователя
         Response responseUpdateWithoutAuthorization = userClient.updateUserWithoutAuthorization(new User(updateEmail, updatePassword, updateName));
