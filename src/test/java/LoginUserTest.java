@@ -1,3 +1,5 @@
+import Setting.SettingProperty;
+import com.github.javafaker.Faker;
 import io.qameta.allure.junit4.DisplayName;
 import io.restassured.RestAssured;
 import io.restassured.response.Response;
@@ -9,6 +11,8 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import requests.UserClient;
+
+import java.io.IOException;
 
 import static org.hamcrest.Matchers.equalTo;
 
@@ -24,6 +28,7 @@ public class LoginUserTest {
     private String accessToken;
     private int statusCodeCreate;
     private String message;
+    private SettingProperty settingProperty;
 
     public LoginUserTest(String email, String password, int statusCode, boolean success, int statusCodeCreate, String message) {
         this.email = email;
@@ -37,19 +42,26 @@ public class LoginUserTest {
 
     @Parameterized.Parameters
     public static Object[][]getData(){
+        Faker faker = new Faker();
         return new Object[][]{
+                //Успешная авторизация
                 {"testemailclient123@example.com", "ABcd12345!", 200, true, 200, null},
-                {"testemailclient123@example.com", "12345", 401, false, 200, "email or password are incorrect"},
+                //Пользователь ввел некорректный пароль
+                {"testemailclient123@example.com", faker.internet().password(), 401, false, 200, "email or password are incorrect"},
+                //Пользователь не ввел email
                 {null, "ABcd12345!", 401, false, 200, "email or password are incorrect"},
+                //Пользователь не ввел пароль
                 {"testemailclient123@example.com", null, 401, false, 200, "email or password are incorrect"},
-                {"netTakogoClienta", "346345345", 401, false, 200, "email or password are incorrect"}
+                //Пользователь ввел не существующий email
+                {faker.internet().emailAddress(), "346345345", 401, false, 200, "email or password are incorrect"}
 
         };
     }
 
     @Before
-    public void setUp(){
-        RestAssured.baseURI = "https://stellarburgers.nomoreparties.site/";
+    public void setUp() throws IOException {
+        settingProperty = new SettingProperty();
+        RestAssured.baseURI = settingProperty.getPropertyUrl();
         user = new User("testemailclient123@example.com", "ABcd12345!", "Test Client");
         userClient = new UserClient();
         login = new Login(email, password);

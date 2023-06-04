@@ -8,6 +8,13 @@ import static io.restassured.RestAssured.given;
 
 public class OrderClient {
     private static final String ORDER_PATH = "api/orders";
+    private static final String INGREDIENT_PATH = "api/ingredients";
+
+    @Step("Получить данные об ингредиентах")
+    public Response getIngredient(){
+        return given()
+                .get(INGREDIENT_PATH);
+    }
 
     @Step("Создать заказ")
     public Response createOrder(Order order){

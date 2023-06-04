@@ -1,3 +1,5 @@
+import Setting.SettingProperty;
+import com.github.javafaker.Faker;
 import io.qameta.allure.junit4.DisplayName;
 import io.restassured.RestAssured;
 import io.restassured.response.Response;
@@ -9,6 +11,8 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import requests.UserClient;
+
+import java.io.IOException;
 
 import static org.hamcrest.Matchers.equalTo;
 @RunWith(Parameterized.class)
@@ -23,6 +27,7 @@ public class ChangingUserDataTest {
     private UserClient userClient;
     private String accessToken;
     private Login login;
+    private SettingProperty settingProperty;
 
     public ChangingUserDataTest(String email, String updateEmail, String password, String updatePassword, String name, String updateName) {
         this.email = email;
@@ -35,22 +40,24 @@ public class ChangingUserDataTest {
 
     @Parameterized.Parameters
     public static Object[][]getData(){
+        Faker faker = new Faker();
         return new Object[][]{
                 //Обновляются все данные
-                {"old@example.com", "new.email@example.com", "43534", "NewPassword123", "Nikolay", "Sergey"},
+                {"old@example.com", faker.internet().emailAddress(), "43534", faker.internet().password(), "Nikolay", faker.name().firstName()},
                 //Обновляется только пароль
-                {"old@example.com", "old@example.com", "43534", "New678", "Nikolay", "Nikolay"},
+                {"old@example.com", "old@example.com", "43534", faker.internet().password(), "Nikolay", "Nikolay"},
                 //Обновляется только email
-                {"old@example.com", "new340@example.com", "43534", "43534", "Nikolay", "Nikolay"},
+                {"old@example.com", faker.internet().emailAddress(), "43534", "43534", "Nikolay", "Nikolay"},
                 //Обновляется только имя
-                {"old@example.com", "new340@example.com", "43534", "43534", "Nikolay", "Sergey"}
+                {"old@example.com", "new340@example.com", "43534", "43534", "Nikolay", faker.name().firstName()}
 
         };
     }
 
     @Before
-   public void setUp(){
-       RestAssured.baseURI = "https://stellarburgers.nomoreparties.site/";
+   public void setUp() throws IOException {
+        settingProperty = new SettingProperty();
+       RestAssured.baseURI = settingProperty.getPropertyUrl();
        user = new User(email, password, name);
        userClient = new UserClient();
        login = new Login(updateEmail, updatePassword);

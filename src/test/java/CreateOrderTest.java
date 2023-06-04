@@ -1,3 +1,4 @@
+import Setting.SettingProperty;
 import io.qameta.allure.junit4.DisplayName;
 import io.restassured.RestAssured;
 import io.restassured.response.Response;
@@ -8,6 +9,8 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import requests.OrderClient;
 
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 import static org.hamcrest.Matchers.equalTo;
@@ -16,12 +19,16 @@ import static org.hamcrest.Matchers.notNullValue;
 @RunWith(Parameterized.class)
 public class CreateOrderTest {
     private List<String>ingredients;
+    private int fromIndex;
+    private int toIndex;
     private int statusCode;
     private OrderClient orderClient;
     private Order order;
+    private SettingProperty settingProperty;
 
-    public CreateOrderTest(List<String> ingredients, int statusCode) {
-        this.ingredients = ingredients;
+    public CreateOrderTest(int fromIndex, int toIndex, int statusCode) {
+        this.fromIndex = fromIndex;
+        this.toIndex = toIndex;
         this.statusCode = statusCode;
     }
 
@@ -29,34 +36,34 @@ public class CreateOrderTest {
     public static Object[][]getData(){
         return new Object[][]{
                 //Добавить один ингредиент
-                {List.of("61c0c5a71d1f82001bdaaa7a"), 200},
+                {0, 1, 200},
                 //Добавить несколько ингредиентов
-                {List.of("61c0c5a71d1f82001bdaaa74", "61c0c5a71d1f82001bdaaa78", "61c0c5a71d1f82001bdaaa76"), 200},
+                {0, 7, 200},
+                //Добавить несколько ингредиентов
+                {10, 15, 200},
                 //Не добавлять ингредиенты
-                {null, 400},
-                //Добавить не валидный хэш ингредиента
-                {List.of("95869"), 500}
-
+                {0, 0, 400},
         };
     }
 
     @Before
-    public void setUp(){
-        RestAssured.baseURI = "https://stellarburgers.nomoreparties.site";
+    public void setUp() throws IOException {
+        settingProperty = new SettingProperty();
+        RestAssured.baseURI = settingProperty.getPropertyUrl();
         orderClient = new OrderClient();
-        order = new Order(ingredients);
     }
 
     @Test
     @DisplayName("Проверка создания заказа")
     public void createOrder(){
+        Response responseGetIngredient = orderClient.getIngredient();
+        ingredients = new ArrayList<>(responseGetIngredient.then().log().all().statusCode(200).extract().path("data._id"));
+        order = new Order(ingredients.subList(fromIndex, toIndex));
         Response responseCreate = orderClient.createOrder(order);
         if(statusCode == 200){
             responseCreate.then().log().all().assertThat().body("order.number", notNullValue()).body("success", equalTo(true));
         } else if (statusCode == 400) {
             responseCreate.then().log().all().assertThat().body("success", equalTo(false)).body("message", equalTo("Ingredient ids must be provided"));
-        } else if (statusCode == 500) {
-            responseCreate.then().log().all().statusCode(statusCode);
         }
     }
 }

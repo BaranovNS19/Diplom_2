@@ -1,3 +1,5 @@
+import Setting.SettingProperty;
+import com.github.javafaker.Faker;
 import io.qameta.allure.junit4.DisplayName;
 import io.restassured.RestAssured;
 import io.restassured.response.Response;
@@ -9,6 +11,9 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import requests.OrderClient;
 import requests.UserClient;
+
+import java.io.IOException;
+
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.notNullValue;
 
@@ -21,6 +26,7 @@ public class GetOrderUserTest {
     private UserClient userClient;
     private OrderClient orderClient;
     private String accessToken;
+    private SettingProperty settingProperty;
 
     public GetOrderUserTest(String email, String password, String name) {
         this.email = email;
@@ -30,16 +36,18 @@ public class GetOrderUserTest {
 
     @Parameterized.Parameters
     public static Object[][]getData(){
+        Faker faker = new Faker();
         return new Object[][]{
-                {"clientOrder@example.com", "03493", "Victor"},
-                {"ilyamodnic@example.com", "028349823", "Ilya"},
-                {"darya1222@example.com", "Doc740", "Daria"}
+                {faker.internet().emailAddress(), faker.internet().password(), faker.name().firstName()},
+                {faker.internet().emailAddress(), faker.internet().password(), faker.name().firstName()},
+                {faker.internet().emailAddress(), faker.internet().password(), faker.name().firstName()}
         };
     }
 
     @Before
-    public void setUp(){
-        RestAssured.baseURI = "https://stellarburgers.nomoreparties.site/";
+    public void setUp() throws IOException {
+        settingProperty = new SettingProperty();
+        RestAssured.baseURI = settingProperty.getPropertyUrl();
         orderClient = new OrderClient();
         user = new User(email, password, name);
         userClient = new UserClient();

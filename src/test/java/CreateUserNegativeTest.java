@@ -1,4 +1,5 @@
-import io.qameta.allure.Step;
+import Setting.SettingProperty;
+import com.github.javafaker.Faker;
 import io.qameta.allure.junit4.DisplayName;
 import io.restassured.RestAssured;
 import io.restassured.response.Response;
@@ -9,6 +10,8 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import requests.UserClient;
+
+import java.io.IOException;
 
 import static org.hamcrest.Matchers.equalTo;
 
@@ -23,6 +26,7 @@ public class CreateUserNegativeTest {
     private int statusCode;
     private boolean success;
     private String message;
+    private SettingProperty settingProperty;
 
     public CreateUserNegativeTest(String email, String password, String name, int statusCode, boolean success, String message) {
         this.email = email;
@@ -35,18 +39,24 @@ public class CreateUserNegativeTest {
 
     @Parameterized.Parameters
     public static Object[][]getData(){
+        Faker faker = new Faker();
         return new Object[][]{
-                {"vasya123@example.com", null , "Василий", 403, false, "Email, password and name are required fields"},
-                {null, "1234", "Nikolay", 403, false, "Email, password and name are required fields"},
-                {"34534@example.com", "34634", null, 403, false, "Email, password and name are required fields"},
-                {"alexey22@example.com", "6574", "Алексей", 200, true, null}
+                //Пользователь не заполнил пароль
+                {faker.internet().emailAddress(), null , faker.name().firstName(), 403, false, "Email, password and name are required fields"},
+                //Пользователь не заполнил email
+                {null, faker.internet().password(), faker.name().firstName(), 403, false, "Email, password and name are required fields"},
+                //Пользователь не заполнил имя
+                {faker.internet().emailAddress(), faker.internet().password(), null, 403, false, "Email, password and name are required fields"},
+                //Создание существующего пользователя
+                {faker.internet().emailAddress(), faker.internet().password(), faker.name().firstName(), 200, true, null}
 
         };
     }
 
     @Before
-    public void setUp(){
-        RestAssured.baseURI = "https://stellarburgers.nomoreparties.site/";
+    public void setUp() throws IOException {
+        settingProperty = new SettingProperty();
+        RestAssured.baseURI = settingProperty.getPropertyUrl();
         user = new User(email, password, name);
         userClient = new UserClient();
     }
